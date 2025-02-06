@@ -13,8 +13,9 @@
 import CoreBluetooth
 
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
+    static let shared = BLEManager()
     private var centralManager: CBCentralManager!
-    @Published var discoveredPeripherals: [CBPeripheral] = []
+    @Published var discoveredPeripherals: [(peripheral:CBPeripheral,rssi:Int)] = []
     @Published var connectedPeripheral: CBPeripheral?
     @Published var characteristicData: CBCharacteristic?
     @Published var isPoweredOn = false
@@ -33,7 +34,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     func startScan() {
         if centralManager.state == .poweredOn {
             isScanning = true
-            discoveredPeripherals.removeAll()  //前回発見したペリフェラルをクリア
+            discoveredPeripherals.removeAll()  //前回発見したペリフェラルをクリア 意味ない
             centralManager.scanForPeripherals(withServices: nil, options: nil)  //スキャン
         }
     }
@@ -41,6 +42,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     func stopScan() {
         isScanning = false
         centralManager.stopScan()  //スキャン停止
+        discoveredPeripherals.removeAll()  //発見したペリフェラルをクリア
     }
     //任意のペリフェラルと接続
     func connectToPeripheral(_ peripheral: CBPeripheral) {
@@ -59,9 +61,16 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //ペリフェラルを発見したら、ペリフェラルsに追加
     func centralManager(_ central: CBCentralManager,  didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber){
-        if !discoveredPeripherals.contains(where: {$0.identifier == peripheral.identifier}) {  //discoveredPeripheralsに存在しないペリフェラルならば
-            discoveredPeripherals.append(peripheral)  //追加
+        let RSSI_Int = RSSI.intValue
+        if !discoveredPeripherals.contains(where: {$0.peripheral.identifier == peripheral.identifier}) {  //discoveredPeripheralsに存在しないペリフェラルならば
+            discoveredPeripherals.append((peripheral:peripheral,rssi:RSSI_Int))  //追加
         }
+        else{
+            if let index = discoveredPeripherals.firstIndex(where: {$0.peripheral.identifier == peripheral.identifier}){
+                discoveredPeripherals[index].rssi = RSSI_Int
+            }
+        }
+        discoveredPeripherals.sort(by: {$0.rssi > $1.rssi})
     }
     //ペリフェラルと接続したら、サービスの検索
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
