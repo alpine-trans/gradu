@@ -1,9 +1,18 @@
 import SwiftUI
 
+struct CustomToggleLabel: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+    }
+}
+
 struct CustomToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack {
-            Text(configuration.label)
+            configuration.label
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             Spacer()
             
@@ -28,9 +37,11 @@ struct ContentView: View {
     @State private var isOn = false
     
     var body: some View {
-        Toggle("Custom Toggle", isOn: $isOn)
-            .toggleStyle(CustomToggleStyle())
-            .padding()
+        Toggle(isOn: $isOn) {
+            CustomToggleLabel(title: "Custom Toggle")
+        }
+        .toggleStyle(CustomToggleStyle())
+        .padding()
     }
 }
 
