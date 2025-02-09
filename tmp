@@ -1,0 +1,41 @@
+import SwiftUI
+
+struct CustomToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack {
+            Text(configuration.label)
+            
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(configuration.isOn ? Color.green : Color.red)
+                    .frame(width: 50, height: 50)
+                
+                Text(configuration.isOn ? "ON" : "OFF")
+                    .foregroundColor(.white)
+                    .bold()
+            }
+            .onTapGesture {
+                configuration.isOn.toggle()
+            }
+        }
+        .padding()
+    }
+}
+
+struct ContentView: View {
+    @State private var isOn = false
+    
+    var body: some View {
+        Toggle("Custom Toggle", isOn: $isOn)
+            .toggleStyle(CustomToggleStyle())
+            .padding()
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+    }
+}
