@@ -1,32 +1,30 @@
 import SwiftUI
 
-struct CustomToggleLabel: View {
-    let title: String
-
-    var body: some View {
-        Text(title)
-    }
-}
-
-struct CustomToggleStyle: ToggleStyle {
+struct LargeToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack {
             configuration.label
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
+                .font(.title)  // ラベルのフォントサイズを大きくする
+
             Spacer()
-            
+
             ZStack {
-                Circle()
+                RoundedRectangle(cornerRadius: 16)
                     .fill(configuration.isOn ? Color.green : Color.red)
-                    .frame(width: 50, height: 50)
-                
-                Text(configuration.isOn ? "ON" : "OFF")
-                    .foregroundColor(.white)
-                    .bold()
-            }
-            .onTapGesture {
-                configuration.isOn.toggle()
+                    .frame(width: 100, height: 50)  // Toggleの大きさを変更
+                    .animation(.easeInOut, value: configuration.isOn)
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 40, height: 40)  // トグルハンドルの大きさを変更
+                    .offset(x: configuration.isOn ? 25 : -25)  // ハンドルの位置を調整
+                    .animation(.easeInOut, value: configuration.isOn)
+                    .gesture(
+                        TapGesture()
+                            .onEnded {
+                                configuration.isOn.toggle()
+                            }
+                    )
             }
         }
         .padding()
@@ -35,12 +33,12 @@ struct CustomToggleStyle: ToggleStyle {
 
 struct ContentView: View {
     @State private var isOn = false
-    
+
     var body: some View {
         Toggle(isOn: $isOn) {
-            CustomToggleLabel(title: "Custom Toggle")
+            Text("Large Toggle")
         }
-        .toggleStyle(CustomToggleStyle())
+        .toggleStyle(LargeToggleStyle())
         .padding()
     }
 }
