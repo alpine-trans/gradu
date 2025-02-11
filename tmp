@@ -48,6 +48,6 @@ IOSアプリ(セントラル)とESP32(ペリフェラル)とのBLE接続
             centralManager.scanForPeripherals(withServices: [peripheralUUID], options: nil)
         }
     }
-
+"6c5bfad3-2c9c-e0df-f2b7-ac012c891ae0"
 
 
