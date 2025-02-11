@@ -39,15 +39,6 @@ IOSアプリ(セントラル)とESP32(ペリフェラル)とのBLE接続
 21.BLE接続を切る
 
 
-    //再接続
-    func reconnectToPeripheral() {
-        print("bbbbbbb")
-        if let UUIDString = UserDefaults.standard.string(forKey: "PeripheralUUID"), let savedPeripheralUUID = UUID(uuidString: UUIDString) {
-            print("reconnect")
-            let peripheralUUID = CBUUID(nsuuid: savedPeripheralUUID)
-            centralManager.scanForPeripherals(withServices: [peripheralUUID], options: nil)
-        }
-    }
-"6c5bfad3-2c9c-e0df-f2b7-ac012c891ae0"
-
-
+やること
+・アプリではじめトグルとモーターがリンクしていない
+・ハード
