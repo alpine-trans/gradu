@@ -37,3 +37,17 @@ IOSアプリ(セントラル)とESP32(ペリフェラル)とのBLE接続
 19.ユーザーがアプリ上の”動作ボタン”を押すと、ペリフェラル側のアクチュエータ―2を動かす
 20.アクチュエータ―2が動き終わったら、それをアプリ上に表示
 21.BLE接続を切る
+
+
+    //再接続
+    func reconnectToPeripheral() {
+        print("bbbbbbb")
+        if let UUIDString = UserDefaults.standard.string(forKey: "PeripheralUUID"), let savedPeripheralUUID = UUID(uuidString: UUIDString) {
+            print("reconnect")
+            let peripheralUUID = CBUUID(nsuuid: savedPeripheralUUID)
+            centralManager.scanForPeripherals(withServices: [peripheralUUID], options: nil)
+        }
+    }
+
+
+
