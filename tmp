@@ -1,50 +1,39 @@
-import SwiftUI
+IOSアプリ(セントラル)とESP32(ペリフェラル)とのBLE接続
+互いの情報を双方で覚えているかで挙動を変える
 
-struct LargeToggleStyle: ToggleStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.label
-                .font(.title)  // ラベルのフォントサイズを大きくする
+1.情報を覚えていない場合
+・ペリフェラルが無制限にアドバタイズを行う
+・ユーザーがアプリ上のボタンを押すと、セントラルが無制限にスキャンを行う
+・ユーザーがペリフェラルを選択したら、接続をする
+・接続されたら、双方で互いを覚え、ペリフェラル側で処理1をする
+・ユーザーがアプリ上のボタンを押したら、ペリフェラル側で処理2をする
+・処理2がされたら、アプリ上にそれを表示しBLE接続を切る。 
+2.情報を覚えている場合
+・アプリ上にそのUUIDを表示する
+・ペリフェラルがそのデバイスにアドバタイズを行う
+・ユーザーがアプリ上のボタンを押しら、セントラルがそのUUIDにスキャンを行い、接続をする
+・接続されたら、双方で互いを忘れ、ペリフェラル側で処理1をする
+・ユーザーがアプリ上のボタンを押したら、ペリフェラル側で処理2をする
+・処理2がされたら、アプリ上にそれを表示しBLE接続を切る。
 
-            Spacer()
-
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(configuration.isOn ? Color.green : Color.red)
-                    .frame(width: 100, height: 50)  // Toggleの大きさを変更
-                    .animation(.easeInOut, value: configuration.isOn)
-
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 40, height: 40)  // トグルハンドルの大きさを変更
-                    .offset(x: configuration.isOn ? 25 : -25)  // ハンドルの位置を調整
-                    .animation(.easeInOut, value: configuration.isOn)
-                    .gesture(
-                        TapGesture()
-                            .onEnded {
-                                configuration.isOn.toggle()
-                            }
-                    )
-            }
-        }
-        .padding()
-    }
-}
-
-struct ContentView: View {
-    @State private var isOn = false
-
-    var body: some View {
-        Toggle(isOn: $isOn) {
-            Text("Large Toggle")
-        }
-        .toggleStyle(LargeToggleStyle())
-        .padding()
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
+1.ペリフェラル(ESP32)がアドバイスをする
+2.ユーザーがIOSアプリ上の”接続する”ボタンを押すと、セントラルとしてスキャンを始める
+3.見つけたペリフェラルを表示していく
+4.ユーザーが接続するペリフェラルを選びそのボタンを押すと、接続要求が行く
+5.ペリフェラル側が、セントラルデバイスのアドレスを記録していなければ、接続許可を出す
+6.アプリ上に接続がされたことを表示
+7.ペリフェラルのUUIDをアプリ側で記録
+8.セントラルデバイスのアドレスをペリフェラル側で記録
+9.ペリフェラル側のアクチュエータ―1を動かす
+10.ユーザーがアプリ上の”動作ボタン”を押すと、ペリフェラル側のアクチュエータ―2を動かす
+11.アクチュエータ―2が動き終わったら、それをアプリ上に表示
+12.BLE接続を切る
+13.ペリフェラル側は記録したデバイス以外とは接続できないようにしておく
+14.ユーザーがアプリ上の”再接続する”ボタンを押すと、記録したセントラルとペリフェラルでBLE接続をする
+15.アプリ上に接続されたことを表示
+16.セントラル側で記録していたUUIDを削除
+17.ペリフェラル側で記録していたセントラルデバイスのアドレスを削除
+18.ペリフェラルのアクチュエーター1を動かす
+19.ユーザーがアプリ上の”動作ボタン”を押すと、ペリフェラル側のアクチュエータ―2を動かす
+20.アクチュエータ―2が動き終わったら、それをアプリ上に表示
+21.BLE接続を切る
