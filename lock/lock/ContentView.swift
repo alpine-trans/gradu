@@ -28,8 +28,11 @@ struct ContentView: View {
             Spacer()
             
             
-            Text("UUID")
-            
+            Text(bleManager.isConnected ? "true" : "false")
+            Text(bleManager.hasConnected ? "true" : "false")
+            if let text = UserDefaults.standard.string(forKey: bleManager.PeripheralKey) {
+                Text(text)
+            }
             
             Spacer()
             
@@ -65,6 +68,7 @@ struct ContentView: View {
                             TapGesture()
                                 .onEnded {
                                     bleManager.isOpen.toggle()
+                                    sendLockState(value: bleManager.isOpen)
                                 }
                         )
                     Text(bleManager.isOpen ? "閉じる" : "開く")
@@ -105,7 +109,9 @@ struct ContentView: View {
     
     //
     func sendLockState(value: Bool) {
-//        if let characteristic = bleManager
+        if let characteristic = bleManager.characteristicData {
+            bleManager.writeBoolValue(bleManager.isOpen, for: characteristic)
+        }
     }
     
     func sign(value: Double) -> Double {

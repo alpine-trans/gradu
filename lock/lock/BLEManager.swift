@@ -21,8 +21,11 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var isPoweredOn = false
     @Published var isScanning = false
     @Published var isConnected = false
+    @Published var hasConnected = false
     @Published var receivedData: String = ""
     @Published var isOpen = false
+    @Published var PeripheralKey = "PeripheralUUID"
+    @Published var ServiseUUID = ""
     
     //初期
     override init() {
@@ -31,6 +34,10 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     
     //接続
+    //接続状態(電源のオンオフ等)が変化したら、
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        isPoweredOn = central.state == .poweredOn
+    }
     //スキャン開始
     func startScan() {
         if centralManager.state == .poweredOn {
@@ -45,23 +52,26 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         centralManager.stopScan()  //スキャン停止
         discoveredPeripherals.removeAll()  //発見したペリフェラルをクリア
     }
-    //任意のペリフェラルと接続
-    func connectToPeripheral(_ peripheral: CBPeripheral) {
-        centralManager.stopScan()  //スキャン停止
-        centralManager.connect(peripheral, options: nil)  //接続
-    }
-    //ペリフェラルとの接続を解除
-    func disconnectFromPeripheral() {
-        if let peripheral = connectedPeripheral {  //connectedPeripheralがnilでないなら
-            centralManager.cancelPeripheralConnection(peripheral)  //接続解除
+    //再接続
+    func reconnectToPeripheral() {
+        print("bbbbbbb")
+        if let UUIDString = UserDefaults.standard.string(forKey: PeripheralKey){
+            print("cccccc")
+            if let savedPeripheralUUID = UUID(uuidString: UUIDString) {
+                print("reconnect")
+                let peripheralUUID = CBUUID(nsuuid: savedPeripheralUUID)
+                centralManager.scanForPeripherals(withServices: [peripheralUUID], options: nil)
+//                let uuiddd = UUID(uuidString: "6c5bfad3-2c9c-e0df-f2b7-ac012c891ae0")
+//                let uuidd = CBUUID(nsuuid: uuiddd!)
+//                centralManager.scanForPeripherals(withServices: [uuidd], options: nil)
+
+                print(peripheralUUID)//EC8152A0-1572-5B71-54B0-B248DB2521A2
+            }
         }
-    }
-    //接続状態(電源のオンオフ等)が変化したら、
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        isPoweredOn = central.state == .poweredOn
     }
     //ペリフェラルを発見したら、ペリフェラルsに追加
     func centralManager(_ central: CBCentralManager,  didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber){
+        print("discoverd")
         let RSSI_Int = RSSI.intValue
         if !discoveredPeripherals.contains(where: {$0.peripheral.identifier == peripheral.identifier}) {  //discoveredPeripheralsに存在しないペリフェラルならば
             discoveredPeripherals.append((peripheral:peripheral,rssi:RSSI_Int))  //追加
@@ -73,6 +83,19 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         }
         discoveredPeripherals.sort(by: {$0.rssi > $1.rssi})
     }
+    //任意のペリフェラルと接続
+    func connectToPeripheral(_ peripheral: CBPeripheral) {
+        centralManager.stopScan()  //スキャン停止
+        centralManager.connect(peripheral, options: nil)  //接続
+//        discoveredPeripherals.removeAll()
+    }
+    //ペリフェラルとの接続を解除
+    func disconnectFromPeripheral() {
+        if let peripheral = connectedPeripheral {  //connectedPeripheralがnilでないなら
+            centralManager.cancelPeripheralConnection(peripheral)  //接続解除
+        }
+        discoveredPeripherals.removeAll()
+    }
     //ペリフェラルと接続したら、サービスの検索
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         connectedPeripheral = peripheral  //接続したペリフェラルを記録
@@ -82,15 +105,35 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //ペリフェラルと接続を絶ったら、
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        
+        //ペリフェラルの保存、削除
+        if UserDefaults.standard.string(forKey: PeripheralKey) != nil {
+            deletePeripheralUUID()
+        }
+        else {
+            savePeripheralUUID(ServiseUUID)
+        }
+        
         connectedPeripheral = nil  //接続していたペリフェラルを削除
         isConnected = false
+        hasConnected = true
     }
+    //保存
+    func savePeripheralUUID(_ uuid: String) {
+        UserDefaults.standard.set(uuid, forKey: PeripheralKey)
+    }
+    //削除
+    func deletePeripheralUUID() {
+        UserDefaults.standard.removeObject(forKey: PeripheralKey)
+    }
+
     
     //通信
     //サービスを発見したら、キャラクタリスティックを検索
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?){
         if let services = peripheral.services {  //Serviceが存在するなら
             for service in services {
+                ServiseUUID = service.uuid.uuidString
                 peripheral.discoverCharacteristics(nil, for: service)  //キャラクタリスティックの検索
             }
         }
@@ -108,8 +151,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //キャラクタリスティックの値が変化したら、receivedDataに記録
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        if let value = characteristic.value, let string = String(data: value, encoding: .utf8) {  //値が存在するなら
-            receivedData = string
+        if let value = characteristic.value {  //値が存在するなら
+            isOpen = value.first == 1
         }
     }
     //Bool値をwrite

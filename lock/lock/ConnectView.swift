@@ -24,20 +24,20 @@ struct connectView: View {
             
             Button(action: {
                 if bleManager.isPoweredOn {
-//                    if bleManager.isScanning {
-//                        bleManager.stopScan()
-//                    }
-//                    else{
-//                        bleManager.startScan()
-//                    }
-                    bleManager.startScan()
+                    if UserDefaults.standard.string(forKey: bleManager.PeripheralKey) != nil {
+                        print("aaaaaa")
+                        bleManager.reconnectToPeripheral()
+                    }
+                    else {
+                        bleManager.startScan()
+                    }
                     messageAboutOff = ""
                 }
                 else{
                     messageAboutOff = "Bluetooth機能がオフになっているようです。"
                 }
             }) {
-                Text(bleManager.isScanning ? "再検索" : "デバイスの検索")
+                Text((UserDefaults.standard.string(forKey: bleManager.PeripheralKey) != nil && !bleManager.isConnected /*&& bleManager.hasConnected*/) ? "再接続" : (bleManager.isScanning ? "再検索" : "デバイスの検索"))
                     .padding()
                     .background(Color.blue)
                     .foregroundColor(.white)
