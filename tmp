@@ -42,3 +42,6 @@ IOSアプリ(セントラル)とESP32(ペリフェラル)とのBLE接続
 やること
 ・アプリではじめトグルとモーターがリンクしていない
 ・ハード
+
+
+'buildExpression' is unavailable: this expression does not conform to 'View'
