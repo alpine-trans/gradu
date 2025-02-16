@@ -11,7 +11,7 @@
 import SwiftUI
 
 
-struct connectView: View {
+struct ConnectView: View {
     @ObservedObject var bleManager = BLEManager.shared
     @State var messageAboutOff = ""
     
@@ -79,5 +79,5 @@ struct connectView: View {
 
 
 #Preview {
-    connectView()
+    ConnectView()
 }

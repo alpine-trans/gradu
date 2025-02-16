@@ -54,24 +54,15 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //再接続
     func reconnectToPeripheral() {
-        print("bbbbbbb")
         if let UUIDString = UserDefaults.standard.string(forKey: PeripheralKey){
-            print("cccccc")
             if let savedPeripheralUUID = UUID(uuidString: UUIDString) {
-                print("reconnect")
                 let peripheralUUID = CBUUID(nsuuid: savedPeripheralUUID)
                 centralManager.scanForPeripherals(withServices: [peripheralUUID], options: nil)
-//                let uuiddd = UUID(uuidString: "6c5bfad3-2c9c-e0df-f2b7-ac012c891ae0")
-//                let uuidd = CBUUID(nsuuid: uuiddd!)
-//                centralManager.scanForPeripherals(withServices: [uuidd], options: nil)
-
-                print(peripheralUUID)//EC8152A0-1572-5B71-54B0-B248DB2521A2
             }
         }
     }
     //ペリフェラルを発見したら、ペリフェラルsに追加
     func centralManager(_ central: CBCentralManager,  didDiscover peripheral: CBPeripheral, advertisementData: [String: Any], rssi RSSI: NSNumber){
-        print("discoverd")
         let RSSI_Int = RSSI.intValue
         if !discoveredPeripherals.contains(where: {$0.peripheral.identifier == peripheral.identifier}) {  //discoveredPeripheralsに存在しないペリフェラルならば
             discoveredPeripherals.append((peripheral:peripheral,rssi:RSSI_Int))  //追加
@@ -105,6 +96,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //ペリフェラルと接続を絶ったら、
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        isOpen = false
         
         //ペリフェラルの保存、削除
         if UserDefaults.standard.string(forKey: PeripheralKey) != nil {
@@ -144,6 +136,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             for characteristic in characteristics {
                 if characteristic.properties.contains(.read) || characteristic.properties.contains(.notify) {  //キャラクタリスティックの属性にreadとnotifyが含まれるのなら
                     characteristicData = characteristic
+                    peripheral.readValue(for: characteristic)
                     peripheral.setNotifyValue(true, for: characteristic)  //任意のnotifyオン設定
                 }
             }
@@ -151,8 +144,10 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //キャラクタリスティックの値が変化したら、receivedDataに記録
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        print("ii")
         if let value = characteristic.value {  //値が存在するなら
             isOpen = value.first == 1
+            print("in")
         }
     }
     //Bool値をwrite
