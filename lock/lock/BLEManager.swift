@@ -144,10 +144,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     }
     //キャラクタリスティックの値が変化したら、receivedDataに記録
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        print("ii")
         if let value = characteristic.value {  //値が存在するなら
             isOpen = value.first == 1
-            print("in")
         }
     }
     //Bool値をwrite
